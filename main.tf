@@ -23,3 +23,9 @@ module "server" {
   subnet_id = module.network.subnet_id
   zone = var.zone
 }
+
+module "firewall" {
+  source = "./modules/firewall"
+  network = module.network.network_self_link
+  instance_tags = ["web-server"]
+}
