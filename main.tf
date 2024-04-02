@@ -22,10 +22,18 @@ module "server" {
   source    = "./modules/server"
   subnet_id = module.network.subnet_id
   zone      = var.zone
+  project   = var.project
 }
 
 module "firewall" {
   source        = "./modules/network/firewall"
   network       = module.network.network_self_link
   instance_tags = ["web-server"]
+}
+
+module "nat" {
+  source  = "./modules/network/nat"
+  network = module.network.network_self_link
+  region  = var.region
+  project = var.project
 }
