@@ -1,6 +1,6 @@
 variable "network" {
   description = "Network for the firewall rule to be placed in."
-  type = string
+  type        = string
 }
 
 variable "instance_tags" {
