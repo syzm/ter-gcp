@@ -1,7 +1,7 @@
 # Image for the MIG
 resource "google_compute_image" "server_image" {
   name = "my-server-image"
-  source_image = "https://www.googleapis.com/compute/v1/projects/nd-proj-419109/global/machineImages/server-apache"
+  source_image = "https://www.googleapis.com/compute/v1/projects/nd-proj-419109/global/images/server-image"
 }
 
 # Instance template for a web-server
