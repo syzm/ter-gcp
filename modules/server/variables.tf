@@ -16,5 +16,5 @@ variable "project" {
 variable "instance_count" {
   description = "Number of instances to create"
   type        = number
-  default     = 1
+  default     = 3
 }
