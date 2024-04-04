@@ -1,16 +1,10 @@
-# Image for the MIG
-resource "google_compute_image" "server_image" {
-  name = "my-server-image"
-  source_image = "https://www.googleapis.com/compute/v1/projects/nd-proj-419109/global/images/server-image"
-}
-
 # Instance template for a web-server
 resource "google_compute_instance_template" "my_template" {
   name         = "apache-template-updated"
   machine_type = "e2-standard-2"
 
   disk {
-    source_image = google_compute_image.server_image.self_link
+    source_image = "projects/nd-proj-419109/global/images/xfce-instance"
     boot         = true
   }
 
