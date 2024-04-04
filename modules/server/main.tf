@@ -10,7 +10,7 @@ resource "google_compute_instance_group_manager" "mig" {
 
   named_port {
     name = "http"
-    port = 8080
+    port = 80
   }
 }
 
@@ -79,6 +79,6 @@ resource "google_compute_health_check" "default" {
   http_health_check {
     port_specification = "USE_SERVING_PORT"
   }
-  check_interval_sec = 1
-  timeout_sec        = 1
+  check_interval_sec = 5
+  timeout_sec        = 5
 }
