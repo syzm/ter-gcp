@@ -1,3 +1,29 @@
+# Image for the MIG
+resource "google_compute_image" "server_image" {
+  name = "my-server-image"
+  source_image = "https://www.googleapis.com/compute/v1/projects/nd-proj-419109/global/machineImages/server-apache"
+}
+
+# Instance template for a web-server
+resource "google_compute_instance_template" "my_template" {
+  name         = "apache-template-updated"
+  machine_type = "e2-standard-2"
+
+  disk {
+    source_image = google_compute_image.server_image.self_link
+    boot         = true
+  }
+
+  network_interface {
+    subnetwork = var.subnet_id
+  }
+
+  tags                    = ["web-server", "allow-health-check"]
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # Managed instance group for the app
 resource "google_compute_instance_group_manager" "mig" {
   name               = "my-mig"
@@ -14,26 +40,6 @@ resource "google_compute_instance_group_manager" "mig" {
   }
 }
 
-# Instance template for a web-server
-resource "google_compute_instance_template" "my_template" {
-  name         = "apache-template"
-  machine_type = "e2-standard-2"
-
-  disk {
-    source_image = "debian-cloud/debian-11"
-    boot         = true
-  }
-
-  network_interface {
-    subnetwork = var.subnet_id
-  }
-
-  tags                    = ["web-server", "allow-health-check"]
-  metadata_startup_script = file("${path.module}/apache2.sh")
-  lifecycle {
-    create_before_destroy = true
-  }
-}
 
 # Reserved IP address
 resource "google_compute_global_address" "default" {
@@ -69,6 +75,7 @@ resource "google_compute_backend_service" "default" {
   protocol  = "HTTP"
   health_checks           = [google_compute_health_check.default.id]
   backend {
+    
     group = google_compute_instance_group_manager.mig.instance_group
   }
 }
