@@ -1,16 +1,10 @@
-# Image for the MIG
-resource "google_compute_image" "server_image" {
-  name = "my-server-image"
-  source_image = "projects/nd-proj-419109/global/images/xfce-instance"
-}
-
 # Instance template for a web-server
 resource "google_compute_instance_template" "my_template" {
-  name         = "xfce-template"
+  name         = "xfce-template-1"
   machine_type = "e2-standard-2"
 
   disk {
-    source_image = google_compute_image.server_image.self_link
+    source_image = "projects/nd-proj-419109/global/images/xfce-instance"
     boot         = true
   }
 
@@ -18,10 +12,12 @@ resource "google_compute_instance_template" "my_template" {
     subnetwork = var.subnet_id
   }
 
-  tags                    = ["web-server", "allow-health-check"]
+  tags = ["web-server", "allow-health-check"]
   lifecycle {
     create_before_destroy = true
   }
+
+  metadata_startup_script = file("${path.module}/startup.sh")
 }
 
 # Managed instance group for the app
@@ -70,19 +66,19 @@ resource "google_compute_url_map" "default" {
 
 # Backend service
 resource "google_compute_backend_service" "default" {
-  name      = "apache-xlb-backend-service"
-  port_name = "http"
-  protocol  = "HTTP"
-  health_checks           = [google_compute_health_check.default.id]
+  name          = "apache-xlb-backend-service"
+  port_name     = "http"
+  protocol      = "HTTP"
+  health_checks = [google_compute_health_check.default.id]
   backend {
-    
+
     group = google_compute_instance_group_manager.mig.instance_group
   }
 }
 
-# health check
+# Health check
 resource "google_compute_health_check" "default" {
-  name     = "apache-xlb-health-check"
+  name = "apache-xlb-health-check"
   http_health_check {
     port_specification = "USE_SERVING_PORT"
   }
