@@ -1,6 +1,6 @@
 # Instance template for a web-server
 resource "google_compute_instance_template" "my_template" {
-  name         = "xfce-template-1"
+  name_prefix  = "xfce-template-"
   machine_type = "e2-standard-2"
 
   disk {
@@ -17,12 +17,13 @@ resource "google_compute_instance_template" "my_template" {
     create_before_destroy = true
   }
 
-  metadata_startup_script = file("${path.module}/startup.sh")
+  metadata_startup_script = data.template_file.startup_script.rendered
 }
 
 # Managed instance group for the app
 resource "google_compute_instance_group_manager" "mig" {
-  name               = "my-mig"
+  # Workaround to recreate mig on template change
+  name = substr("my-mig-${md5(google_compute_instance_template.my_template.name)}", 0, 63)
   base_instance_name = "apache-instance"
   zone               = var.zone
   target_size        = var.instance_count
@@ -33,6 +34,10 @@ resource "google_compute_instance_group_manager" "mig" {
   named_port {
     name = "http"
     port = 80
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -71,7 +76,6 @@ resource "google_compute_backend_service" "default" {
   protocol      = "HTTP"
   health_checks = [google_compute_health_check.default.id]
   backend {
-
     group = google_compute_instance_group_manager.mig.instance_group
   }
 }
@@ -84,4 +88,28 @@ resource "google_compute_health_check" "default" {
   }
   check_interval_sec = 5
   timeout_sec        = 5
+}
+
+data "template_file" "startup_script" {
+  template = <<EOF
+    #!/bin/bash
+
+    sudo apt-get update && sudo apt-get -y install apache2
+
+    dpkg-query --status tightvncserver > /dev/null 2>&1
+    rc=$?
+    if [  "$rc" -ne "0" ];
+    then
+      echo "Installing vnc components"
+      DEBIAN_FRONTEND=noninteractive apt-get install xfce4 xfce4-goodies tightvncserver -y
+      mkdir --parents ~/.vnc
+      echo "Szymon19" | vncpasswd -f > ~/.vnc/passwd
+      chmod 600 ~/.vnc/passwd
+    fi
+    vncserver :1
+
+    sudo systemctl start apache2
+
+    echo '<!doctype html><html><body><h1>Hello You Successfully was able to run a webserver on GCP with Terraform!</h1></body></html>' | sudo tee /var/www/html/index.html
+    EOF
 }
