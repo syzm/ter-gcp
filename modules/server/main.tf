@@ -1,10 +1,10 @@
 # Instance template for a web-server
 resource "google_compute_instance_template" "my_template" {
-  name_prefix  = "xfce-template-"
+  name_prefix  = "vnc-template-"
   machine_type = "e2-standard-2"
 
   disk {
-    source_image = "projects/nd-proj-419109/global/images/xfce-instance"
+    source_image = "projects/nd-proj-419109/global/images/xfce-again"
     boot         = true
   }
 
@@ -24,7 +24,7 @@ resource "google_compute_instance_template" "my_template" {
 resource "google_compute_instance_group_manager" "mig" {
   # Workaround to recreate mig on template change
   name = substr("my-mig-${md5(google_compute_instance_template.my_template.name)}", 0, 63)
-  base_instance_name = "apache-instance"
+  base_instance_name = "xfce-instance"
   zone               = var.zone
   target_size        = var.instance_count
   version {
@@ -93,23 +93,8 @@ resource "google_compute_health_check" "default" {
 data "template_file" "startup_script" {
   template = <<EOF
     #!/bin/bash
-
-    sudo apt-get update && sudo apt-get -y install apache2
-
-    dpkg-query --status tightvncserver > /dev/null 2>&1
-    rc=$?
-    if [  "$rc" -ne "0" ];
-    then
-      echo "Installing vnc components"
-      DEBIAN_FRONTEND=noninteractive apt-get install xfce4 xfce4-goodies tightvncserver -y
-      mkdir --parents ~/.vnc
-      echo "Szymon19" | vncpasswd -f > ~/.vnc/passwd
-      chmod 600 ~/.vnc/passwd
-    fi
-    vncserver :1
-
-    sudo systemctl start apache2
-
-    echo '<!doctype html><html><body><h1>Hello You Successfully was able to run a webserver on GCP with Terraform!</h1></body></html>' | sudo tee /var/www/html/index.html
+    sudo apt-get -y update && sudo apt-get -y upgrade
+    sudo systemctl restart vncserver@1
+    echo '<!doctype html><html><body><h1>Some page.</h1></body></html>' | sudo tee /var/www/html/index.html
     EOF
 }
