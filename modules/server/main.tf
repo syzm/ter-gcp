@@ -17,7 +17,7 @@ resource "google_compute_instance_template" "my_template" {
     create_before_destroy = true
   }
 
-  metadata_startup_script = templatefile("${path.module}/startup.tftpl", {})
+  metadata_startup_script = data.template_file.startup_script.rendered
 }
 
 # Managed instance group for the app
@@ -88,4 +88,13 @@ resource "google_compute_health_check" "default" {
   }
   check_interval_sec = 5
   timeout_sec        = 5
+}
+
+data "template_file" "startup_script" {
+  template = <<EOF
+    #!/bin/bash
+    sudo apt-get -y update && sudo apt-get -y upgrade
+    sudo systemctl restart vncserver@1
+    echo '<!doctype html><html><body><h1>Some page.</h1></body></html>' | sudo tee /var/www/html/index.html
+    EOF
 }
