@@ -1,0 +1,4 @@
+#!/bin/bash
+sudo apt-get -y update && sudo apt-get -y upgrade
+sudo systemctl restart vncserver@1
+echo '<!doctype html><html><body><h1>Some page.</h1></body></html>' | sudo tee /var/www/html/index.html
