@@ -1,4 +1,8 @@
 terraform {
+  backend "gcs" {
+    bucket = "ter-backend"
+    prefix = "sand/"
+  }
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -11,6 +15,16 @@ provider "google" {
   project = var.project
   region  = var.region
   zone    = var.zone
+}
+
+resource "google_storage_bucket" "default" {
+  name          = "ter-backend"
+  force_destroy = true
+  location      = "EU"
+  storage_class = "STANDARD"
+  versioning {
+    enabled = true
+  }
 }
 
 module "network" {
